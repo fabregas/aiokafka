@@ -8,7 +8,6 @@ from kafka.protocol.metadata import MetadataRequest, MetadataResponse
 
 from aiokafka.client import AIOKafkaClient
 from aiokafka.conn import AIOKafkaConnection
-from .fixtures import ZookeeperFixture, KafkaFixture
 from ._testutil import KafkaIntegrationTestCase, run_until_complete
 
 
@@ -116,16 +115,6 @@ class TestAIOKafkaClient(unittest.TestCase):
 
 
 class TestKafkaClientIntegration(KafkaIntegrationTestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        cls.zk = ZookeeperFixture.instance()
-        cls.server = KafkaFixture.instance(0, cls.zk.host, cls.zk.port)
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.server.close()
-        cls.zk.close()
 
     @run_until_complete
     def test_bootstrap(self):

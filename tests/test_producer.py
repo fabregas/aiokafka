@@ -7,7 +7,6 @@ from kafka.common import (UnknownTopicOrPartitionError,
                           NotLeaderForPartitionError,
                           LeaderNotAvailableError)
 
-from .fixtures import ZookeeperFixture, KafkaFixture
 from ._testutil import KafkaIntegrationTestCase, run_until_complete
 
 from aiokafka.producer import AIOKafkaProducer
@@ -15,16 +14,6 @@ from aiokafka.producer import AIOKafkaProducer
 
 class TestKafkaProducerIntegration(KafkaIntegrationTestCase):
     topic = 'test_produce_topic'
-
-    @classmethod
-    def setUpClass(cls):
-        cls.zk = ZookeeperFixture.instance()
-        cls.server = KafkaFixture.instance(0, cls.zk.host, cls.zk.port)
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.server.close()
-        cls.zk.close()
 
     @run_until_complete
     def test_producer_start(self):

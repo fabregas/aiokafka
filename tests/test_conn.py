@@ -10,7 +10,6 @@ from kafka.protocol.commit import (GroupCoordinatorRequest,
                                    GroupCoordinatorResponse)
 
 from aiokafka.conn import AIOKafkaConnection, create_conn
-from .fixtures import ZookeeperFixture, KafkaFixture
 from ._testutil import BaseTest, run_until_complete
 
 
@@ -35,21 +34,10 @@ class ConnTest(unittest.TestCase):
 
 class ConnIntegrationTest(BaseTest):
 
-    @classmethod
-    def setUpClass(cls):
-        cls.zk = ZookeeperFixture.instance()
-        cls.server = KafkaFixture.instance(0, cls.zk.host, cls.zk.port)
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.server.close()
-        cls.zk.close()
-
     @run_until_complete
     def test_global_loop_for_create_conn(self):
         asyncio.set_event_loop(self.loop)
-        host, port = self.server.host, self.server.port
-        conn = yield from create_conn(host, port)
+        conn = yield from create_conn(self.kafka_host, self.kafka_port)
         self.assertIs(conn._loop, self.loop)
         conn.close()
         # make sure second closing does nothing and we have full coverage
@@ -58,8 +46,8 @@ class ConnIntegrationTest(BaseTest):
 
     @run_until_complete
     def test_basic_connection_load_meta(self):
-        host, port = self.server.host, self.server.port
-        conn = yield from create_conn(host, port, loop=self.loop)
+        conn = yield from create_conn(
+            self.kafka_host, self.kafka_port, loop=self.loop)
 
         self.assertEqual(conn.connected(), True)
         request = MetadataRequest([])
@@ -73,8 +61,8 @@ class ConnIntegrationTest(BaseTest):
         messages and kafka does not send response, and we make sure that
         futures do not stuck in queue forever"""
 
-        host, port = self.server.host, self.server.port
-        conn = yield from create_conn(host, port, loop=self.loop)
+        conn = yield from create_conn(
+            self.kafka_host, self.kafka_port, loop=self.loop)
 
         # prepare message
         msg = Message(b'foo')
@@ -89,8 +77,8 @@ class ConnIntegrationTest(BaseTest):
 
     @run_until_complete
     def test_send_to_closed(self):
-        host, port = self.server.host, self.server.port
-        conn = AIOKafkaConnection(host=host, port=port, loop=self.loop)
+        conn = AIOKafkaConnection(
+            host=self.kafka_host, port=self.kafka_port, loop=self.loop)
         request = MetadataRequest([])
         with self.assertRaises(ConnectionError):
             yield from conn.send(request)
@@ -107,12 +95,11 @@ class ConnIntegrationTest(BaseTest):
 
     @run_until_complete
     def test_invalid_correlation_id(self):
-        host, port = self.server.host, self.server.port
-
         request = MetadataRequest([])
 
         # setup connection with mocked reader and writer
-        conn = AIOKafkaConnection(host=host, port=port, loop=self.loop)
+        conn = AIOKafkaConnection(
+            host=self.kafka_host, port=self.kafka_port, loop=self.loop)
 
         # setup reader
         reader = mock.MagicMock()
@@ -134,12 +121,11 @@ class ConnIntegrationTest(BaseTest):
 
     @run_until_complete
     def test_correlation_id_on_group_coordinator_req(self):
-        host, port = self.server.host, self.server.port
-
         request = GroupCoordinatorRequest(consumer_group='test')
 
         # setup connection with mocked reader and writer
-        conn = AIOKafkaConnection(host=host, port=port, loop=self.loop)
+        conn = AIOKafkaConnection(
+            host=self.kafka_host, port=self.kafk_port, loop=self.loop)
 
         # setup reader
         reader = mock.MagicMock()
@@ -167,7 +153,6 @@ class ConnIntegrationTest(BaseTest):
 
     @run_until_complete
     def test_osserror_in_reader_task(self):
-        host, port = self.server.host, self.server.port
 
         @asyncio.coroutine
         def invoke_osserror(*a, **kw):
@@ -176,7 +161,8 @@ class ConnIntegrationTest(BaseTest):
 
         request = MetadataRequest([])
         # setup connection with mocked reader and writer
-        conn = AIOKafkaConnection(host=host, port=port, loop=self.loop)
+        conn = AIOKafkaConnection(
+            host=self.kafka_host, port=self.kafka_port, loop=self.loop)
 
         # setup reader
         reader = mock.MagicMock()
