@@ -1,15 +1,10 @@
 import asyncio
 import pytest
 import json
-import uuid
-import unittest
 from unittest import mock
 
-from kafka import RoundRobinPartitioner, HashedPartitioner
-
 from kafka.cluster import ClusterMetadata
-from kafka.common import (KafkaError,
-                          UnknownTopicOrPartitionError,
+from kafka.common import (UnknownTopicOrPartitionError,
                           MessageSizeTooLargeError,
                           NotLeaderForPartitionError,
                           LeaderNotAvailableError)
@@ -17,7 +12,6 @@ from kafka.common import (KafkaError,
 from ._testutil import KafkaIntegrationTestCase, run_until_complete
 
 from aiokafka.producer import AIOKafkaProducer
-from aiokafka.client import AIOKafkaClient
 
 
 @pytest.mark.usefixtures('setup_test_class')
@@ -51,7 +45,7 @@ class TestKafkaProducerIntegration(KafkaIntegrationTestCase):
         self.assertEqual(len(resp.topics), 1)
         self.assertEqual(resp.topics[0][0], self.topic)
         self.assertEqual(len(resp.topics[0][1]), 1)
-        self.assertTrue(resp.topics[0][1][0][0] in (0,1))  # partition
+        self.assertTrue(resp.topics[0][1][0][0] in (0, 1))  # partition
         self.assertEqual(resp.topics[0][1][0][1], 0)  # error code
         self.assertEqual(resp.topics[0][1][0][2], 0)  # offset
 
@@ -59,14 +53,17 @@ class TestKafkaProducerIntegration(KafkaIntegrationTestCase):
         self.assertEqual(resp.topics[0][1][0][0], 1)  # partition
 
         resp = yield from producer.send(self.topic, b'value', key=b'KEY')
-        self.assertTrue(resp.topics[0][1][0][0] in (0,1))  # partition
+        self.assertTrue(resp.topics[0][1][0][0] in (0, 1))  # partition
         self.assertEqual(resp.topics[0][1][0][1], 0)  # error code
         yield from producer.stop()
 
     @run_until_complete
     def test_producer_send_with_serializer(self):
-        key_serializer = lambda val: val.upper().encode()
-        serializer = lambda val: json.dumps(val).encode()
+        def key_serializer(val):
+            return val.upper().encode()
+
+        def serializer(val):
+            return json.dumps(val).encode()
         producer = AIOKafkaProducer(
             loop=self.loop, bootstrap_servers=self.hosts,
             value_serializer=serializer,
@@ -79,7 +76,7 @@ class TestKafkaProducerIntegration(KafkaIntegrationTestCase):
         resp = yield from producer.send(self.topic, value, key=key)
         partition = resp.topics[0][1][0][0]
         offset = resp.topics[0][1][0][2]
-        self.assertTrue(partition in (0,1))  # partition
+        self.assertTrue(partition in (0, 1))  # partition
         self.assertEqual(resp.topics[0][1][0][1], 0)  # error code
 
         resp = yield from producer.send(self.topic, 'some str', key=key)
@@ -114,7 +111,7 @@ class TestKafkaProducerIntegration(KafkaIntegrationTestCase):
         self.assertEqual(len(resp.topics), 1)
         self.assertEqual(resp.topics[0][0], self.topic)
         self.assertEqual(len(resp.topics[0][1]), 1)
-        self.assertTrue(resp.topics[0][1][0][0] in (0,1))  # partition
+        self.assertTrue(resp.topics[0][1][0][0] in (0, 1))  # partition
         self.assertEqual(resp.topics[0][1][0][1], 0)  # error code
         yield from producer.stop()
 
@@ -126,13 +123,13 @@ class TestKafkaProducerIntegration(KafkaIntegrationTestCase):
         yield from self.wait_topic(producer.client, self.topic)
 
         with mock.patch.object(
-            ClusterMetadata, 'leader_for_partition') as mocked:
+                ClusterMetadata, 'leader_for_partition') as mocked:
             mocked.return_value = -1
             with self.assertRaises(LeaderNotAvailableError):
                 yield from producer.send(self.topic, b'text')
 
         with mock.patch.object(
-            ClusterMetadata, 'leader_for_partition') as mocked:
+                ClusterMetadata, 'leader_for_partition') as mocked:
             mocked.return_value = None
             with self.assertRaises(NotLeaderForPartitionError):
                 yield from producer.send(self.topic, b'text')
