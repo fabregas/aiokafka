@@ -125,7 +125,7 @@ class ConnIntegrationTest(BaseTest):
 
         # setup connection with mocked reader and writer
         conn = AIOKafkaConnection(
-            host=self.kafka_host, port=self.kafk_port, loop=self.loop)
+            host=self.kafka_host, port=self.kafka_port, loop=self.loop)
 
         # setup reader
         reader = mock.MagicMock()

@@ -3,22 +3,18 @@
 FLAGS=
 SCALA_VERSION=2.11
 KAFKA_VERSION=0.8.2.1
-DOCKER_IMAGE_NAME=aiokafka_tests_$(SCALA_VERSION)_$(KAFKA_VERSION)
-
+DOCKER_IMAGE_NAME=aiokafka/tests:$(SCALA_VERSION)_$(KAFKA_VERSION)
 
 flake:
 	flake8 aiokafka tests
 
-test: flake .docker-test
-
-test-old: flake
-	nosetests -s $(FLAGS) ./tests/
+# test: flake .docker-test
+test: .docker-test
 
 vtest: flake
 	nosetests -s -v $(FLAGS) ./tests/
 
-cov cover coverage:
-	nosetests -s --with-cover --cover-html --cover-branches $(FLAGS) --cover-package aiokafka ./tests/  --ignore-files test_consumer.py
+cov cover coverage: .docker-test-cov
 	@echo "open file://`pwd`/cover/index.html"
 
 clean:
@@ -51,6 +47,9 @@ doc:
 	@docker rmi -f $(DOCKER_IMAGE_NAME)
 
 .docker-test: .docker-build
-	@DOCKER_IMAGE_NAME=$(DOCKER_IMAGE_NAME) FLAGS=$(FLAGS) sh runtests.sh
+	@DOCKER_IMAGE_NAME=$(DOCKER_IMAGE_NAME)  FLAGS=$(FLAGS) sh runtests.sh
 
-.PHONY: all flake test vtest cov clean doc
+.docker-test-cov: .docker-build
+	@DOCKER_IMAGE_NAME=$(DOCKER_IMAGE_NAME) EXTRA_NOSE_ARGS="--with-cover --cover-html --cover-branches --cover-package aiokafka" FLAGS=$(FLAGS) sh runtests.sh
+
+.PHONY: all flake test vtest cov clean doc .docker-check .docker-build .docker-clean .docker-test
