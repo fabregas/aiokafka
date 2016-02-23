@@ -12,7 +12,7 @@ while true; do
     sleep .1
 done
 
-KAFKA_HOST=$DOCKERIP KAFKA_PORT=$KAFKA_PORT nosetests -s $FLAGS $EXTRA_NOSE_ARGS ./tests/
+KAFKA_HOST=$DOCKERIP KAFKA_PORT=$KAFKA_PORT nosetests -s $FLAGS $EXTRA_NOSE_ARGS ./tests/ --ignore-files test_consumer.py
 
 RESULT=$?
 echo "Removing docker container..."
