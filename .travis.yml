@@ -15,7 +15,7 @@ env:
         - KAFKA_VERSION=0.8.2.0 SCALA_VERSION=2.11 PYTHONASYNCIODEBUG=0
 
 before_install:
-    - sudo apt-get install libsnappy-dev
+    - sudo apt-get install -y libsnappy-dev
     - wget -N https://archive.apache.org/dist/kafka/${KAFKA_VERSION}/kafka_${SCALA_VERSION}-${KAFKA_VERSION}.tgz
     - echo "Extracting kafka binaries for ${KAFKA_VERSION}"
     - tar xzvf kafka_${SCALA_VERSION}-${KAFKA_VERSION}.t*
