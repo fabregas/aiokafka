@@ -16,9 +16,6 @@ env:
 
 before_install:
     - sudo apt-get install -y libsnappy-dev
-    - wget -N https://archive.apache.org/dist/kafka/${KAFKA_VERSION}/kafka_${SCALA_VERSION}-${KAFKA_VERSION}.tgz
-    - echo "Extracting kafka binaries for ${KAFKA_VERSION}"
-    - tar xzvf kafka_${SCALA_VERSION}-${KAFKA_VERSION}.t*
     - sudo service docker stop
     - sudo apt-get purge -y docker-engine
     - sudo apt-get install -y docker-engine
