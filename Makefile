@@ -1,8 +1,8 @@
 # Some simple testing tasks (sorry, UNIX only).
 
 FLAGS=
-SCALA_VERSION=2.11
-KAFKA_VERSION=0.8.2.1
+SCALA_VERSION?=2.11
+KAFKA_VERSION?=0.8.2.1
 DOCKER_IMAGE_NAME=aiokafka/tests:$(SCALA_VERSION)_$(KAFKA_VERSION)
 
 flake:
