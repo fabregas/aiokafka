@@ -36,14 +36,11 @@ doc:
 	make -C docs html
 	@echo "open file://`pwd`/docs/_build/html/index.html"
 
-.docker-check:
-	@which docker > /dev/null
-
-.docker-build: .docker-check
+.docker-build:
 	@echo "Building docker image with Scala $(SCALA_VERSION) and Kafka $(KAFKA_VERSION)"
 	@docker build -qt $(DOCKER_IMAGE_NAME) --build-arg SCALA_VERSION=$(SCALA_VERSION) --build-arg KAFKA_VERSION=$(KAFKA_VERSION) ./tests/.docker
 
-.docker-clean: .docker-check
+.docker-clean:
 	@docker rmi -f $(DOCKER_IMAGE_NAME)
 
 .docker-test: .docker-build
@@ -52,4 +49,4 @@ doc:
 .docker-test-cov: .docker-build
 	@DOCKER_IMAGE_NAME=$(DOCKER_IMAGE_NAME) EXTRA_NOSE_ARGS="--with-cover --cover-html --cover-branches --cover-package aiokafka" FLAGS=$(FLAGS) sh runtests.sh
 
-.PHONY: all flake test vtest cov clean doc .docker-check .docker-build .docker-clean .docker-test
+.PHONY: all flake test vtest cov clean doc .docker-build .docker-clean .docker-test
