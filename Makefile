@@ -12,7 +12,7 @@ test: flake
 vtest: flake
 	nosetests -s -v $(FLAGS) ./tests/
 
-cov cover coverage:
+cov cover coverage: flake
 	nosetests -s --with-cover --cover-html --cover-branches $(FLAGS) --cover-package aiokafka ./tests/  --ignore-files test_consumer.py
 	@echo "open file://`pwd`/cover/index.html"
 

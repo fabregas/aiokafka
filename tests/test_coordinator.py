@@ -1,4 +1,3 @@
-import json
 import asyncio
 from unittest import mock
 
@@ -119,7 +118,6 @@ class TestKafkaCoordinatorIntegration(KafkaIntegrationTestCase):
         tp_list = subscription2.assigned_partitions()
         self.assertEqual(tp_list, set([('topic1', 0), ('topic1', 1),
                                        ('topic2', 0), ('topic2', 1)]))
-
 
         yield from coordinator2.close()
         yield from client2.close()
