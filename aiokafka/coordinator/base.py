@@ -46,7 +46,7 @@ class BaseCoordinator(object):
     """
     def __init__(self, client, *, loop, group_id='aiokafka-default-group',
                  session_timeout_ms=30000, heartbeat_interval_ms=3000,
-                 retry_backoff_ms=100):
+                 retry_backoff_ms=100, api_version=(0, 9)):
         """
         Keyword Arguments:
             group_id (str): name of the consumer group to join for dynamic
@@ -80,8 +80,12 @@ class BaseCoordinator(object):
         # rejoin group can be called in parallel
         # (from consumer and from heartbeat task), so we need lock
         self._rejoin_lock = asyncio.Lock(loop=self.loop)
-        self.heartbeat_task = ensure_future(
-            self._heartbeat_task_routine(), loop=self.loop)
+
+        if api_version >= (0, 9):
+            self.heartbeat_task = ensure_future(
+                self._heartbeat_task_routine(), loop=self.loop)
+        else:
+            self.heartbeat_task = None
 
     @abc.abstractmethod
     def protocol_type(self):

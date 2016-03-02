@@ -61,7 +61,8 @@ class AIOConsumerCoordinator(BaseCoordinator):
             client, loop=loop, group_id=group_id,
             session_timeout_ms=session_timeout_ms,
             heartbeat_interval_ms=heartbeat_interval_ms,
-            retry_backoff_ms=retry_backoff_ms)
+            retry_backoff_ms=retry_backoff_ms,
+            api_version=api_version)
 
         self._api_version = api_version
         self._enable_auto_commit = enable_auto_commit
@@ -71,6 +72,7 @@ class AIOConsumerCoordinator(BaseCoordinator):
         self._partitions_per_topic = {}
         self._cluster = client.cluster
         self._cluster.request_update()
+        self._handle_metadata_update(self._cluster)
         self._cluster.add_listener(self._handle_metadata_update)
         self._auto_commit_task = None
         self._closing = asyncio.Future(loop=loop)
@@ -250,6 +252,8 @@ class AIOConsumerCoordinator(BaseCoordinator):
         if self._subscription.needs_fetch_committed_offsets:
             offsets = yield from self.fetch_committed_offsets(
                 self._subscription.assigned_partitions())
+            if not offsets:
+                return
 
             for partition, offset in offsets.items():
                 # verify assignment is still active
