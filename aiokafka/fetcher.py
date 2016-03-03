@@ -123,7 +123,6 @@ class Fetcher:
             while not self._records.empty():
                 yield from asyncio.sleep(self._fetch_timeout, loop=self._loop)
 
-
     @asyncio.coroutine
     def _proc_fetch_request(self, node_id, request):
         try:
