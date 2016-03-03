@@ -536,7 +536,8 @@ class AIOKafkaConsumer(object):
         If no new messages occured, this method will wait it
 
         Returns:
-            instance of ConsumerRecord
+            instance of collections.namedtuple("ConsumerRecord",
+                ["topic", "partition", "offset", "key", "value"])
         """
         if not self._fetcher.initialized():
             yield from self._init_fetcher()
