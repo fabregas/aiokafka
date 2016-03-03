@@ -120,7 +120,9 @@ class Fetcher:
                 continue
             yield from asyncio.wait(
                 futures, return_when=asyncio.ALL_COMPLETED, loop=self._loop)
-            yield from self._records.join()
+            while not self._records.empty():
+                yield from asyncio.sleep(self._fetch_timeout, loop=self._loop)
+
 
     @asyncio.coroutine
     def _proc_fetch_request(self, node_id, request):
@@ -435,7 +437,6 @@ class Fetcher:
 
             try:
                 (fetch_offset, tp, messages) = self._records.get_nowait()
-                self._records.task_done()
             except asyncio.QueueEmpty:
                 break
 
