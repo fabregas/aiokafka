@@ -175,6 +175,7 @@ class Fetcher:
                         # buffer because that message's size is larger than
                         # fetch size, in this case record this exception
                         self._record_too_large_partitions[tp] = fetch_offset
+                        self._subscriptions.assignment[tp].position += 1
 
                 elif error_type in (Errors.NotLeaderForPartitionError,
                                     Errors.UnknownTopicOrPartitionError):

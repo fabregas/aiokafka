@@ -1,6 +1,7 @@
 import asyncio
 from aiokafka.consumer import AIOKafkaConsumer
 from aiokafka.producer import AIOKafkaProducer
+from aiokafka.fetcher import RecordTooLargeError
 
 from kafka.common import TopicPartition, IllegalStateError
 
@@ -113,6 +114,25 @@ class TestConsumerIntegration(KafkaIntegrationTestCase):
             actual_messages.append(m)
         actual_messages = {m.value for m in actual_messages}
         self.assertEqual(expected_messages, set(actual_messages))
+        yield from consumer.stop()
+
+    @run_until_complete
+    def test_too_large_messages(self):
+        l_msgs = [random_string(10), random_string(50000)]
+        large_messages = yield from self.send_messages(0, l_msgs)
+        r_msgs = [random_string(50)]
+        small_messages = yield from self.send_messages(0, r_msgs)
+
+        consumer = yield from self.consumer_factory(
+            max_partition_fetch_bytes=4000)
+        m = yield from consumer.get_message()
+        self.assertEqual(m.value, large_messages[0])
+
+        with self.assertRaises(RecordTooLargeError):
+            yield from consumer.get_message()
+
+        m = yield from consumer.get_message()
+        self.assertEqual(m.value, small_messages[0])
         yield from consumer.stop()
 
     @run_until_complete
