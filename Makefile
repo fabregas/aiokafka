@@ -14,8 +14,8 @@ test: flake
 vtest: flake
 	@py.test -s -v --no-print-logs --docker-image $(DOCKER_IMAGE) $(FLAGS) tests
 
-cov cover coverage:
-	@py.test -s --no-print-logs --cov aiokafka --cov-report html --docker-image $(DOCKER_IMAGE) $(FLAGS) tests
+cov cover coverage: flake
+	@py.test -s --no-print-logs --cov aiokafka --cov-report html --docker-image $(DOCKER_IMAGE) $(FLAGS) --ignore tests/test_consumer.py tests
 	@echo "open file://`pwd`/htmlcov/index.html"
 
 clean:

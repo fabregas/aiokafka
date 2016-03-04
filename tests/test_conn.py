@@ -1,6 +1,5 @@
 import asyncio
 import unittest
-import functools
 import pytest
 import struct
 from unittest import mock
@@ -12,7 +11,7 @@ from kafka.protocol.commit import (GroupCoordinatorRequest,
                                    GroupCoordinatorResponse)
 
 from aiokafka.conn import AIOKafkaConnection, create_conn
-from ._testutil import run_until_complete
+from ._testutil import run_until_complete, KafkaIntegrationTestCase
 
 
 @pytest.mark.usefixtures('setup_test_class')
@@ -27,8 +26,7 @@ class ConnTest(unittest.TestCase):
         self.assertIsNone(conn._writer)
 
 
-@pytest.mark.usefixtures('setup_test_class')
-class ConnIntegrationTest(unittest.TestCase):
+class ConnIntegrationTest(KafkaIntegrationTestCase):
 
     @run_until_complete
     def test_global_loop_for_create_conn(self):
@@ -117,7 +115,7 @@ class ConnIntegrationTest(unittest.TestCase):
 
     @run_until_complete
     def test_correlation_id_on_group_coordinator_req(self):
-        host, port = self.server.host, self.server.port
+        host, port = self.kafka_host, self.kafka_port
 
         request = GroupCoordinatorRequest(consumer_group='test')
 

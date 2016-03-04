@@ -11,8 +11,7 @@ from kafka.consumer.subscription_state import (
     SubscriptionState,
     ConsumerRebalanceListener)
 
-from .fixtures import ZookeeperFixture, KafkaFixture
-from ._testutil import KafkaIntegrationTestCase, run_until_complete
+from ._testutil import run_until_complete, KafkaIntegrationTestCase
 
 from aiokafka.coordinator.consumer import AIOConsumerCoordinator
 from aiokafka.producer import AIOKafkaProducer
@@ -46,16 +45,6 @@ class MockedKafkaErrCode:
 
 
 class TestKafkaCoordinatorIntegration(KafkaIntegrationTestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.zk = ZookeeperFixture.instance()
-        cls.server = KafkaFixture.instance(0, cls.zk.host, cls.zk.port)
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.server.close()
-        cls.zk.close()
-
     @run_until_complete
     def test_coordinator_workflow(self):
         client = AIOKafkaClient(loop=self.loop, bootstrap_servers=self.hosts)
