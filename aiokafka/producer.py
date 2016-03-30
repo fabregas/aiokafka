@@ -8,6 +8,7 @@ from kafka.common import (TopicPartition,
                           LeaderNotAvailableError,
                           MessageSizeTooLargeError,
                           UnknownTopicOrPartitionError)
+import kafka.common as Errors
 
 from kafka.producer.buffer import MessageSetBuffer
 from kafka.partitioner.default import DefaultPartitioner
@@ -273,6 +274,14 @@ class AIOKafkaProducer(object):
             topics=[(topic, [(partition, buf.buffer())])])
 
         response = yield from self.client.send(leader, request)
+
+        if response is not None:
+            for topic, partitions in response.topics:
+                for partition, error_code, offset in partitions:
+                    error = Errors.for_code(error_code)
+                    if error is not Errors.NoError:
+                        raise error()
+
         return response
 
     def _serialize(self, topic, key, value):

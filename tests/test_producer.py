@@ -1,15 +1,19 @@
 import json
+import asyncio
 from unittest import mock
 
 from kafka.cluster import ClusterMetadata
-from kafka.common import (UnknownTopicOrPartitionError,
+from kafka.common import (UnknownError,
+                          UnknownTopicOrPartitionError,
                           MessageSizeTooLargeError,
                           NotLeaderForPartitionError,
                           LeaderNotAvailableError)
+from kafka.protocol.produce import ProduceResponse
 
 from ._testutil import KafkaIntegrationTestCase, run_until_complete
 
 from aiokafka.producer import AIOKafkaProducer
+from aiokafka.client import AIOKafkaClient
 
 
 class TestKafkaProducerIntegration(KafkaIntegrationTestCase):
@@ -148,3 +152,17 @@ class TestKafkaProducerIntegration(KafkaIntegrationTestCase):
                 yield from producer.send(self.topic, b'text')
 
         yield from producer.stop()
+
+    @run_until_complete
+    def test_producer_send_error(self):
+        producer = AIOKafkaProducer(
+            loop=self.loop, bootstrap_servers=self.hosts)
+        yield from producer.start()
+        yield from self.wait_topic(producer.client, self.topic)
+        with mock.patch.object(
+                AIOKafkaClient, 'send') as mocked:
+            ret = asyncio.Future(loop=self.loop)
+            ret.set_result(ProduceResponse([(self.topic, [(0, -1, 0)])]))
+            mocked.return_value = ret
+            with self.assertRaises(UnknownError):
+                yield from producer.send(self.topic, b'text')
